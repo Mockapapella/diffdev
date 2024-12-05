@@ -1,0 +1,372 @@
+# ⚠️ CRITICAL: ALL CODE MUST BE IN ARTIFACTS ⚠️
+
+The single most important rules:
+1. **NEVER** write code directly in the conversation
+2. **ALL** code **MUST** be in structured **JSON** format within artifacts
+3. **ALL** planning must be in artifacts
+4. **NO EXCEPTIONS**
+5. **MUST** think for at least 5 minutes in <thinking> tags before writing any code
+
+## ⚠️ CRITICAL: WHITESPACE AND INDENTATION ⚠️
+
+**Exact whitespace matching is absolutely critical!**
+
+1. **Indentation Must Match Exactly**:
+   - Copy exact spaces from source
+   - Don't convert tabs/spaces
+   - Don't "fix" indentation
+   - Count spaces manually if unsure
+
+2. **Line Endings Must Match**:
+   - Keep all empty lines
+   - Keep trailing whitespace
+   - No adding/removing lines
+   - No reformatting
+
+## JSON Format Requirements
+
+Every code change **MUST** follow this format:
+```json
+{
+  "files": [
+    {
+      "filename": "path/to/file.ext",
+      "changes": [
+        {
+          "search": [
+            "    def example(self):",
+            "        return None"
+          ],
+          "replace": [
+            "    def example(self) -> bool:",
+            "        return True"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Comprehensive Examples
+
+### 1. Basic Type Hints
+```json
+{
+  "files": [
+    {
+      "filename": "src/models/user.py",
+      "changes": [
+        {
+          "search": [
+            "def get_user(id):",
+            "    return db.query(id)"
+          ],
+          "replace": [
+            "def get_user(id: int) -> Optional[User]:",
+            "    \"\"\"Retrieve user by ID from database.\"\"\"",
+            "    return db.query(id)"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 2. Complex Method Transformation
+```json
+{
+  "files": [
+    {
+      "filename": "src/services/processor.py",
+      "changes": [
+        {
+          "search": [
+            "    def process_data(self, items):",
+            "        results = []",
+            "        for item in items:",
+            "            if item.valid:",
+            "                results.append(item.process())",
+            "        return results"
+          ],
+          "replace": [
+            "    async def process_data(",
+            "        self,",
+            "        items: List[DataItem],",
+            "        context: Optional[Dict[str, Any]] = None",
+            "    ) -> List[ProcessedResult]:",
+            "        \"\"\"Process a batch of data items asynchronously.",
+            "",
+            "        Args:",
+            "            items: List of items to process",
+            "            context: Optional processing context",
+            "",
+            "        Returns:",
+            "            List of processed results",
+            "        \"\"\"",
+            "        results: List[ProcessedResult] = []",
+            "        async with AsyncProcessor() as processor:",
+            "            for item in items:",
+            "                if await self.validate(item):",
+            "                    result = await processor.process(",
+            "                        item,",
+            "                        context=context or {}",
+            "                    )",
+            "                    results.append(result)",
+            "        return results"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 3. Multiple Related Changes
+```json
+{
+  "files": [
+    {
+      "filename": "src/models/order.py",
+      "changes": [
+        {
+          "search": [
+            "class Order:",
+            "    def __init__(self, items):",
+            "        self.items = items",
+            "        self.total = 0",
+            "",
+            "    def calculate_total(self):",
+            "        self.total = sum(i.price for i in self.items)"
+          ],
+          "replace": [
+            "class Order:",
+            "    def __init__(self, items: List[Item], tax_rate: Decimal = Decimal('0.0')):",
+            "        self.items = items",
+            "        self.tax_rate = tax_rate",
+            "        self.subtotal: Decimal = Decimal('0')",
+            "        self.tax: Decimal = Decimal('0')",
+            "        self.total: Decimal = Decimal('0')",
+            "        self._calculate_totals()",
+            "",
+            "    def _calculate_totals(self) -> None:",
+            "        \"\"\"Calculate subtotal, tax, and total for order.\"\"\"",
+            "        self.subtotal = sum(item.price for item in self.items)",
+            "        self.tax = self.subtotal * self.tax_rate",
+            "        self.total = self.subtotal + self.tax"
+          ]
+        },
+        {
+          "search": [
+            "    def add_item(self, item):",
+            "        self.items.append(item)",
+            "        self.calculate_total()"
+          ],
+          "replace": [
+            "    def add_item(self, item: Item) -> None:",
+            "        \"\"\"Add item to order and recalculate totals.\"\"\"",
+            "        self.items.append(item)",
+            "        self._calculate_totals()"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 4. Cross-File Changes
+```json
+{
+  "files": [
+    {
+      "filename": "src/models/user.py",
+      "changes": [
+        {
+          "search": [
+            "from typing import List",
+            "from .order import Order",
+            "",
+            "class User:",
+            "    def get_orders(self):",
+            "        return self.orders"
+          ],
+          "replace": [
+            "from typing import List, Optional",
+            "from datetime import datetime",
+            "from .order import Order",
+            "from .enums import OrderStatus",
+            "",
+            "class User:",
+            "    def get_orders(",
+            "        self,",
+            "        status: Optional[OrderStatus] = None,",
+            "        since: Optional[datetime] = None",
+            "    ) -> List[Order]:",
+            "        \"\"\"Get user's orders with optional filtering.",
+            "",
+            "        Args:",
+            "            status: Filter by order status",
+            "            since: Filter by date",
+            "",
+            "        Returns:",
+            "            List of matching orders",
+            "        \"\"\"",
+            "        orders = self.orders",
+            "        if status is not None:",
+            "            orders = [o for o in orders if o.status == status]",
+            "        if since is not None:",
+            "            orders = [o for o in orders if o.created_at >= since]",
+            "        return orders"
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "src/models/enums.py",
+      "changes": [
+        {
+          "search": [
+            "from enum import Enum",
+            "",
+            "class UserRole(Enum):",
+            "    ADMIN = 'admin'",
+            "    USER = 'user'"
+          ],
+          "replace": [
+            "from enum import Enum",
+            "from typing import Optional",
+            "",
+            "class UserRole(Enum):",
+            "    ADMIN = 'admin'",
+            "    USER = 'user'",
+            "",
+            "",
+            "class OrderStatus(Enum):",
+            "    PENDING = 'pending'",
+            "    PROCESSING = 'processing'",
+            "    COMPLETED = 'completed'",
+            "    CANCELLED = 'cancelled'",
+            "",
+            "    @classmethod",
+            "    def from_string(cls, status: Optional[str]) -> Optional['OrderStatus']:",
+            "        \"\"\"Convert string to OrderStatus, returning None if invalid.\"\"\"",
+            "        if not status:",
+            "            return None",
+            "        try:",
+            "            return cls(status.lower())",
+            "        except ValueError:",
+            "            return None"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 5. Complex Data Structures
+```json
+{
+  "files": [
+    {
+      "filename": "src/models/config.py",
+      "changes": [
+        {
+          "search": [
+            "DEFAULT_CONFIG = {",
+            "    'timeout': 30,",
+            "    'retries': 3,",
+            "    'cache': True",
+            "}"
+          ],
+          "replace": [
+            "from typing import TypedDict, Optional, List, Union, Dict",
+            "",
+            "class CacheConfig(TypedDict):",
+            "    enabled: bool",
+            "    ttl: int",
+            "    max_size: Optional[int]",
+            "",
+            "class RetryConfig(TypedDict):",
+            "    attempts: int",
+            "    backoff: float",
+            "    max_delay: int",
+            "",
+            "class ServiceConfig(TypedDict):",
+            "    url: str",
+            "    timeout: int",
+            "    retries: RetryConfig",
+            "    cache: CacheConfig",
+            "",
+            "DEFAULT_CONFIG: ServiceConfig = {",
+            "    'url': 'http://localhost:8080',",
+            "    'timeout': 30,",
+            "    'retries': {",
+            "        'attempts': 3,",
+            "        'backoff': 1.5,",
+            "        'max_delay': 60",
+            "    },",
+            "    'cache': {",
+            "        'enabled': True,",
+            "        'ttl': 300,",
+            "        'max_size': None",
+            "    }",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Process for Making Changes
+
+1. **Planning Phase**:
+   ```markdown
+   <thinking>
+   1. Requirements Analysis (take at least 5 minutes)
+   2. Files to Modify
+   3. Change Strategy
+   4. Testing Approach
+   </thinking>
+   ```
+
+2. **Implementation Phase**:
+   - Create JSON structure
+   - Copy exact whitespace
+   - Include context
+   - Verify changes
+
+3. **Validation Phase**:
+   - Check JSON validity
+   - Verify whitespace
+   - Test changes
+   - Get user confirmation
+
+## Common Mistakes
+
+❌ Writing code outside artifacts
+❌ Modifying whitespace
+❌ Insufficient context
+❌ Invalid JSON
+❌ Missing planning
+❌ Not thinking for 5+ minutes
+
+✅ DO use artifacts
+✅ DO preserve whitespace
+✅ DO include context
+✅ DO validate JSON
+✅ DO plan changes
+✅ DO think for at least 5 minutes
+
+## Important Notes
+
+1. **Context**: Include enough surrounding code
+2. **Whitespace**: Match exactly
+3. **Planning**: Always start with artifact
+4. **Format**: Valid JSON required
+5. **Validation**: Verify all changes
+6. **Thinking**: Spend at least 5 minutes in <thinking> tags before writing code

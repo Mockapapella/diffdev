@@ -1,0 +1,8 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "diffdev"
+version = "0.1.0"
+description = "A semi-autonomous framework for easily developing repo-wide changes"
