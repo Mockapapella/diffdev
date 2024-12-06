@@ -47,7 +47,7 @@ class CLI:
         self.config = ConfigManager()
         self.context = ContextManager()
         self.llm = LLMClient(self.config.get_api_key())
-        self.patch_manager = PatchManager()
+        self.patch_manager = PatchManager(context_manager=self.context)
         self.last_patch: Optional[str] = None
         self.last_rolled_back_patch: Optional[str] = None
 

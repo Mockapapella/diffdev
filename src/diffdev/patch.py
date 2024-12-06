@@ -11,6 +11,7 @@ from difflib import unified_diff
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -27,15 +28,17 @@ class PatchManager:
         patch_dir (Path): Directory where generated patch files are stored.
     """
 
-    def __init__(self, patch_dir: Optional[Path] = None):
+    def __init__(self, patch_dir: Optional[Path] = None, context_manager=None):
         """Initialize the patch manager.
 
         Args:
             patch_dir (Optional[Path]): Directory to store patches. If None,
                 uses the current directory.
+            context_manager: ContextManager instance for updating file contexts.
         """
         self.patch_dir = Path(patch_dir) if patch_dir else Path(".")
         self.patch_dir.mkdir(exist_ok=True)
+        self.context_manager = context_manager
 
     def generate_patch(self, response: Dict[str, Any]) -> str:
         """Generate a patch file from LLM response.
@@ -157,6 +160,11 @@ class PatchManager:
             )
             logger.info("Successfully applied patch")
 
+            # Update context with modified files
+            if hasattr(self, "context_manager"):
+                for file_path in self._get_modified_files_from_patch(patch_path):
+                    self.context_manager.update_file_in_context(file_path)
+
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to apply patch: {e.stderr}")
             raise
@@ -185,6 +193,26 @@ class PatchManager:
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to rollback patch: {e.stderr}")
             raise
+
+    def _get_modified_files_from_patch(self, patch_path: str) -> List[str]:
+        """Extract list of modified files from a patch file.
+
+        Args:
+            patch_path (str): Path to the patch file
+
+        Returns:
+            List[str]: List of modified file paths
+        """
+        modified_files = []
+        with open(patch_path, "r") as f:
+            for line in f:
+                if line.startswith("+++") and not line.startswith("+++ /dev/null"):
+                    # Extract filename from patch (strip 'b/' prefix)
+                    file_path = line[6:].strip().split("\t")[0]
+                    if file_path.startswith("b/"):
+                        file_path = file_path[2:]
+                    modified_files.append(file_path)
+        return modified_files
 
     def _read_file(self, filename: str) -> str:
         """Read a file's content.

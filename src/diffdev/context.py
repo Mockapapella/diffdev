@@ -80,6 +80,38 @@ class ContextManager:
         messages.append({"role": "user", "content": prompt})
         return messages
 
+    def update_file_in_context(self, file_path: str) -> None:
+        """Update a single file in the context after modification.
+
+        Args:
+            file_path (str): Path to the modified file to update
+        """
+        try:
+            # Find and update the file in context if it exists
+            for msg in self.context:
+                if f"<source>{file_path}</source>" in msg["content"]:
+                    # Read and format the updated content
+                    path = Path(file_path)
+                    with open(path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                        padding = len(str(len(lines)))
+                        formatted_content = "\n".join(
+                            f"{str(i+1).rjust(padding)} | {line.rstrip()}"
+                            for i, line in enumerate(lines)
+                        )
+
+                    # Update the context message
+                    msg["content"] = (
+                        f"<document>\n"
+                        f"<source>{file_path}</source>\n"
+                        f"<document_content>\n{formatted_content}\n</document_content>\n"
+                        f"</document>"
+                    )
+                    logger.info(f"Updated context for modified file: {file_path}")
+                    break
+        except Exception as e:
+            logger.error(f"Error updating context for {file_path}: {e}")
+
     def select_files(self) -> Optional[List[Dict[str, str]]]:
         """Run the TUI selector to update context.
 
