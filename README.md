@@ -9,6 +9,7 @@ diffdev is a command-line tool that helps you make repo-wide code changes using 
 - **Structured Patch Generation**: Changes are returned as a git-style patch for easy application and review
 - **Revision Control Integration**: Apply patches using `git apply` and rollback changes when needed
 - **Claude AI Assistant**: Leverages the powerful Claude language model from Anthropic
+- **Directory Content Copying**: Quickly copy formatted directory trees and file contents to clipboard
 
 ## Requirements
 
@@ -45,6 +46,20 @@ export ANTHROPIC_API_KEY="your-api-key-here"
 - `undo`: Rollback last applied changes
 - `redo`: Reapply last rolled back changes
 - `exit`: Exit diffdev
+
+### Directory Content Copying
+
+To quickly copy a directory's tree structure and file contents:
+
+```bash
+# Copy current directory
+diffdev --copydir
+
+# Copy specific directory
+diffdev --copydir /path/to/directory
+```
+
+This formats the output with line numbers and proper tree structure, respecting gitignore patterns.
 
 ## Example
 
