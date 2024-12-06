@@ -189,12 +189,37 @@ def main():
             const=".",
             help="Copy directory contents to clipboard (default: current directory)",
         )
+        parser.add_argument(
+            "--patch-from-clipboard",
+            action="store_true",
+            help="Generate and apply a patch from clipboard contents",
+        )
         args = parser.parse_args()
 
         # Handle directory copy mode
         if args.copydir is not None:
             copy_directory_contents(args.copydir)
             return
+
+        if args.patch_from_clipboard:
+            try:
+                import json
+
+                import pyperclip
+
+                clipboard_content = pyperclip.paste()
+                patch_manager = PatchManager()
+                patch_data = json.loads(clipboard_content)
+                patch_path = patch_manager.generate_patch(patch_data)
+                patch_manager.apply_patch(patch_path)
+                print("Successfully applied patch from clipboard")
+                return
+            except json.JSONDecodeError:
+                print("Error: Clipboard contents are not valid JSON")
+                sys.exit(1)
+            except Exception as e:
+                print(f"Error applying patch from clipboard: {e}")
+                sys.exit(1)
 
         # Normal diffdev mode
         api_key = os.getenv("ANTHROPIC_API_KEY")
