@@ -7,10 +7,32 @@ name = "diffdev"
 version = "0.1.0"
 description = "A semi-autonomous framework for easily developing repo-wide changes"
 requires-python = ">=3.11"
+authors = [
+    { name = "Mockapapella" }
+]
+readme = "README.md"
+license = { text = "Apache-2.0" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Version Control :: Git"
+]
 dependencies = [
     "anthropic",
     "pathspec",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Mockapapella/diffdev"
+Repository = "https://github.com/Mockapapella/diffdev.git"
+Issues = "https://github.com/Mockapapella/diffdev/issues"
 
 [project.scripts]
 diffdev = "diffdev.cli:main"
