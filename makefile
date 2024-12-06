@@ -38,13 +38,14 @@ define do_release
 	fi
 	@echo "Running $(1) release..."
 	@$(MAKE) version-$(1)
-	git add pyproject.toml
-	git commit -m "Release v$(NEW_VERSION)"
-	git tag -a "v$(NEW_VERSION)" -m "Release v$(NEW_VERSION)"
-	git push origin master "v$(NEW_VERSION)"
-	@$(MAKE) build
-	python -m twine upload -u __token__ -p "$$PYPI_TOKEN" dist/*
-	@echo "Released v$(NEW_VERSION)"
+	@VERSION=$$(grep '^version = ' pyproject.toml | sed 's/version = \"\(.*\)\"/\1/'); \
+	git add pyproject.toml && \
+	git commit -m "Release v$$VERSION" && \
+	git tag -a "v$$VERSION" -m "Release v$$VERSION" && \
+	git push origin master "v$$VERSION" && \
+	$(MAKE) build && \
+	python -m twine upload -u __token__ -p "$$PYPI_TOKEN" dist/* && \
+	echo "Released v$$VERSION"
 endef
 
 release-patch:
