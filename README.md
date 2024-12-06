@@ -12,9 +12,10 @@ diffdev is a command-line tool that helps you make repo-wide code changes using 
 
 ## Requirements
 
-- Python 3.11 or 3.12
+- Python 3.11 or 3.12 (untested for others)
 - Git installed and available in PATH
 - Anthropic API key
+- UNIX like OS
 
 ## Installation
 
