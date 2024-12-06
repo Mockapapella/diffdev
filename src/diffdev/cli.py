@@ -114,6 +114,28 @@ class CLI:
                             print("Changes rolled back successfully.")
                             self.last_rolled_back_patch = self.last_patch
                             self.last_patch = None
+
+                            # Refresh context after rollback
+                            selected_files = []
+                            for msg in self.context.context:
+                                if "<source>" in msg["content"]:
+                                    file_path = (
+                                        msg["content"].split("<source>")[1].split("</source>")[0]
+                                    )
+                                    try:
+                                        with open(file_path, "r", encoding="utf-8") as f:
+                                            lines = f.readlines()
+                                            selected_files.append(
+                                                {"path": file_path, "content": "".join(lines)}
+                                            )
+                                    except Exception as e:
+                                        logger.error(
+                                            f"Error refreshing context for {file_path}: {e}"
+                                        )
+
+                            if selected_files:
+                                self.context.set_context_from_selector(selected_files)
+
                         except Exception as e:
                             print(f"Error rolling back changes: {e}")
                     else:
@@ -126,6 +148,28 @@ class CLI:
                             print("Changes reapplied successfully.")
                             self.last_patch = self.last_rolled_back_patch
                             self.last_rolled_back_patch = None
+
+                            # Refresh context after redo
+                            selected_files = []
+                            for msg in self.context.context:
+                                if "<source>" in msg["content"]:
+                                    file_path = (
+                                        msg["content"].split("<source>")[1].split("</source>")[0]
+                                    )
+                                    try:
+                                        with open(file_path, "r", encoding="utf-8") as f:
+                                            lines = f.readlines()
+                                            selected_files.append(
+                                                {"path": file_path, "content": "".join(lines)}
+                                            )
+                                    except Exception as e:
+                                        logger.error(
+                                            f"Error refreshing context for {file_path}: {e}"
+                                        )
+
+                            if selected_files:
+                                self.context.set_context_from_selector(selected_files)
+
                         except Exception as e:
                             print(f"Error reapplying changes: {e}")
                     else:
@@ -144,6 +188,26 @@ class CLI:
                         patch_path = self.patch_manager.generate_patch(response)
                         self.patch_manager.apply_patch(patch_path)
                         self.last_patch = patch_path
+
+                        # Refresh context after changes
+                        selected_files = []
+                        for msg in self.context.context:
+                            if "<source>" in msg["content"]:
+                                file_path = (
+                                    msg["content"].split("<source>")[1].split("</source>")[0]
+                                )
+                                try:
+                                    with open(file_path, "r", encoding="utf-8") as f:
+                                        lines = f.readlines()
+                                        selected_files.append(
+                                            {"path": file_path, "content": "".join(lines)}
+                                        )
+                                except Exception as e:
+                                    logger.error(f"Error refreshing context for {file_path}: {e}")
+
+                        if selected_files:
+                            self.context.set_context_from_selector(selected_files)
+
                         print("\nChanges applied successfully.")
 
                     except Exception as e:
