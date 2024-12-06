@@ -2,148 +2,19 @@
 import os
 import sys
 import logging
-import curses
-import fnmatch
 import argparse
-import subprocess
-import pyperclip
+import curses
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
 from .config import ConfigManager
 from .context import ContextManager
 from .llm import LLMClient
 from .patch import PatchManager
+from .clipboard import copy_directory_contents
 from .file_selector import FileSelector
 
 logger = logging.getLogger(__name__)
-
-
-class FileContentFormatter:
-    """Formats file contents with line numbers"""
-
-    @staticmethod
-    def format_file_content(file_path: Path) -> str:
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-
-            # Calculate padding for line numbers based on total lines
-            padding = len(str(len(lines)))
-
-            # Format each line with padding
-            formatted_lines = [
-                f"{str(i+1).rjust(padding)} | {line}" for i, line in enumerate(lines)
-            ]
-
-            separator = "-" * 80
-
-            return (
-                f"\n{file_path}:\n"
-                f"{separator}\n"
-                f"{''.join(formatted_lines)}\n"
-                f"{separator}\n"
-            )
-
-        except UnicodeDecodeError:
-            return f"\n{file_path}: [Binary file]\n"
-        except Exception as e:
-            logger.error(f"Error reading file {file_path}: {e}")
-            return f"\n{file_path}: [Error reading file: {e}]\n"
-
-
-class GitignoreParser:
-    """Parser for .gitignore patterns"""
-
-    def __init__(self, gitignore_path: Path):
-        self.patterns: List[str] = []
-        self.load_patterns(gitignore_path)
-
-    def load_patterns(self, gitignore_path: Path) -> None:
-        if not gitignore_path.exists():
-            logger.warning(f".gitignore not found at {gitignore_path}")
-            return
-
-        logger.info(f"Loading .gitignore from {gitignore_path}")
-        with open(gitignore_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    self.patterns.append(line)
-
-    def should_ignore(self, path: str) -> bool:
-        for pattern in self.patterns:
-            if pattern.endswith("/"):
-                pattern = pattern[:-1]
-            if fnmatch.fnmatch(path, pattern) or fnmatch.fnmatch(os.path.basename(path), pattern):
-                return True
-        return False
-
-
-class ProjectTreeGenerator:
-    """Generates a visual tree representation of a project directory"""
-
-    def __init__(self, root_path: Path, gitignore_parser: Optional[GitignoreParser] = None):
-        self.root_path = root_path
-        self.gitignore_parser = gitignore_parser
-        self.output: List[str] = []
-        self.file_contents: List[str] = []
-        self.indent = "    "
-        self.branch = "├── "
-        self.last_branch = "└── "
-        self.pipe = "│   "
-
-    def should_skip(self, path: Path) -> bool:
-        if path.name == ".git":
-            logger.debug(f"Ignoring {path} (.git directory)")
-            return True
-
-        if self.gitignore_parser and self.gitignore_parser.should_ignore(
-            str(path.relative_to(self.root_path))
-        ):
-            logger.debug(f"Ignoring {path} (matches .gitignore pattern)")
-            return True
-        return False
-
-    def generate_tree(self, directory: Path, prefix: str = "") -> None:
-        try:
-            entries = sorted(directory.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower()))
-        except PermissionError:
-            logger.warning(f"Permission denied: {directory}")
-            return
-        except Exception as e:
-            logger.error(f"Error accessing directory {directory}: {e}")
-            return
-
-        entries = [e for e in entries if not self.should_skip(e)]
-
-        for i, entry in enumerate(entries):
-            is_last_entry = i == len(entries) - 1
-            current_prefix = prefix + (self.last_branch if is_last_entry else self.branch)
-
-            self.output.append(f"{current_prefix}{entry.name}")
-
-            if entry.is_file():
-                self.file_contents.append(FileContentFormatter.format_file_content(entry))
-
-            if entry.is_dir():
-                next_prefix = prefix + (self.indent if is_last_entry else self.pipe)
-                self.generate_tree(entry, next_prefix)
-
-    def get_tree(self) -> str:
-        self.output = []
-        self.file_contents = []
-        logger.info(f"Generating tree for {self.root_path}")
-        self.generate_tree(self.root_path)
-
-        full_output = [
-            "\nFile Tree:",
-            "\n".join(self.output),
-            "\nFile Contents:",
-            "".join(self.file_contents),
-        ]
-
-        return "\n".join(full_output)
 
 
 class CLI:
@@ -243,50 +114,6 @@ class CLI:
             except Exception as e:
                 print(f"Error: {e}")
                 continue
-
-
-def copy_directory_contents(directory: Optional[str] = None) -> None:
-    """Copy the contents of a directory to the clipboard"""
-    try:
-        # Get the target directory
-        target_path = Path(directory if directory else ".").resolve()
-
-        if not target_path.exists():
-            logger.error(f"Directory not found: {target_path}")
-            sys.exit(1)
-
-        # Find the root directory (containing .git or .gitignore)
-        current = target_path
-        while current != current.parent:
-            if (current / ".git").exists() or (current / ".gitignore").exists():
-                break
-            current = current.parent
-
-        root_dir = current
-        gitignore_path = root_dir / ".gitignore"
-
-        # Initialize gitignore parser
-        gitignore_parser = GitignoreParser(gitignore_path)
-
-        # Generate the tree
-        logger.info("Starting tree generation")
-        generator = ProjectTreeGenerator(target_path, gitignore_parser)
-        tree = generator.get_tree()
-
-        # Copy to clipboard
-        try:
-            pyperclip.copy(tree)
-            logger.info("Content successfully copied to clipboard")
-        except Exception as e:
-            logger.error(f"Failed to copy to clipboard: {e}")
-            logger.info("Printing content to stdout instead...")
-            print(tree)
-
-        logger.info("Tree generation complete")
-
-    except Exception as e:
-        logger.error(f"Error copying directory contents: {e}")
-        sys.exit(1)
 
 
 def main():
