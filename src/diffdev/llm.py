@@ -1,7 +1,15 @@
-# src/llm.py
+"""Language model interaction module for diffdev.
+
+This module handles communication with Anthropic's Claude API, managing
+prompt construction, response parsing, and error handling for AI-assisted
+code modifications.
+"""
+
 import json
 import logging
-from typing import List, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import List
 
 import anthropic
 
@@ -9,9 +17,24 @@ logger = logging.getLogger(__name__)
 
 
 class LLMClient:
-    """Client for interacting with Anthropic's Claude API."""
+    """Client for interacting with Anthropic's Claude API.
+
+    This class manages all communication with the Claude language model,
+    handling prompt construction, response streaming, and JSON parsing.
+    It ensures reliable communication and proper error handling for
+    AI-assisted code modifications.
+
+    Attributes:
+        client (anthropic.Anthropic): Anthropic API client instance.
+        model (str): The specific Claude model version to use.
+    """
 
     def __init__(self, api_key: str):
+        """Initialize the LLM client.
+
+        Args:
+            api_key (str): Anthropic API key for authentication.
+        """
         self.client = anthropic.Anthropic(api_key=api_key)
         # Use the model you need; just leaving as is
         self.model = "claude-3-5-sonnet-20241022"
@@ -19,20 +42,22 @@ class LLMClient:
     def send_prompt(
         self, context: List[Dict[str, str]], prompt: str, system_prompt: str
     ) -> Dict[str, Any]:
-        """
-        Send prompt to LLM and return response as JSON.
+        """Send a prompt to the LLM and return the parsed response.
+
+        Sends the given prompt along with context to Claude and streams the response,
+        parsing it as JSON for code modifications.
 
         Args:
-            context: List of message dicts with file content
-            prompt: User's prompt/request
-            system_prompt: System prompt for Claude
+            context: List of message dicts with file content.
+            prompt: User's prompt/request.
+            system_prompt: System prompt for Claude.
 
         Returns:
-            Parsed JSON response from Claude
+            Dict[str, Any]: Parsed JSON response containing code modifications.
 
         Raises:
-            ValueError: If response is not valid JSON
-            anthropic.APIError: If API request fails
+            ValueError: If response is not valid JSON.
+            anthropic.APIError: If API request fails.
         """
         try:
             # Prepare messages including context
@@ -76,16 +101,22 @@ class LLMClient:
             raise
 
     def _extract_json(self, text: str) -> str:
-        """
-        Extract JSON from the given text.
-        Priority:
-        1. Look for a ```json fenced code block.
-        2. Try the entire response as JSON.
-        3. Attempt to locate a JSON object by finding the first '{' and last '}' and parse that substring.
+        """Extract valid JSON from the LLM response text.
 
-        Raises ValueError if none of these work.
-        """
+        Attempts multiple strategies to find and extract valid JSON from the response:
+        1. Look for a ```json fenced code block
+        2. Try the entire response as JSON
+        3. Attempt to locate a JSON object using braces
 
+        Args:
+            text (str): Raw response text from the LLM.
+
+        Returns:
+            str: Extracted JSON string.
+
+        Raises:
+            ValueError: If no valid JSON could be extracted.
+        """
         json_start_token = "```json"
         json_end_token = "```"
 

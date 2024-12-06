@@ -1,24 +1,49 @@
-# src/cli.py
-import os
-import sys
-import logging
+"""Command-line interface module for diffdev.
+
+This module provides the main command-line interface for the diffdev tool,
+handling user interaction, file selection, and coordinating between various
+components like the LLM client, patch manager, and context manager.
+"""
+
 import argparse
 import curses
-from pathlib import Path
-from typing import Optional, List
+import logging
+import os
+import sys
+from typing import Optional
 
+from .clipboard import copy_directory_contents
 from .config import ConfigManager
 from .context import ContextManager
+from .file_selector import FileSelector
 from .llm import LLMClient
 from .patch import PatchManager
-from .clipboard import copy_directory_contents
-from .file_selector import FileSelector
 
 logger = logging.getLogger(__name__)
 
 
 class CLI:
+    """Main command-line interface handler for diffdev.
+
+    Manages the interactive session with the user, coordinating file selection,
+    LLM interactions, and patch application. Provides commands for selecting files,
+    applying changes, and managing the undo/redo history.
+
+    Attributes:
+        config (ConfigManager): Configuration manager instance.
+        context (ContextManager): Context manager for selected files.
+        llm (LLMClient): Language model client instance.
+        patch_manager (PatchManager): Manager for patch operations.
+        last_patch (Optional[str]): Path to the last applied patch.
+        last_rolled_back_patch (Optional[str]): Path to the last rolled back patch.
+    """
+
     def __init__(self):
+        """Initialize the CLI handler.
+
+        Sets up the configuration, context management, LLM client, and patch
+        management components.
+        """
         self.config = ConfigManager()
         self.context = ContextManager()
         self.llm = LLMClient(self.config.get_api_key())
@@ -27,6 +52,23 @@ class CLI:
         self.last_rolled_back_patch: Optional[str] = None
 
     def run(self) -> None:
+        """Run the interactive CLI session.
+
+        Manages the main interaction loop, handling file selection, command
+        processing, and error handling. Supports commands for file selection,
+        undo/redo operations, and LLM-guided code modifications.
+
+        The following commands are supported:
+        - 'exit': Quit the program
+        - 'select': Choose new files for context
+        - 'undo': Rollback last applied changes
+        - 'redo': Reapply last rolled back changes
+        - Any other input is treated as a prompt for the LLM
+
+        Raises:
+            Various exceptions may be raised and are caught internally,
+            with appropriate error messages displayed to the user.
+        """
         print("\nStarting diffdev...")
         print("Select files to include in the context:")
 
@@ -117,6 +159,24 @@ class CLI:
 
 
 def main():
+    """Entry point for the diffdev command-line tool.
+
+    Sets up logging, processes command-line arguments, and initializes the
+    main CLI handler. Supports both normal interactive mode and directory
+    copy mode.
+
+    The following command-line options are supported:
+    --copydir [PATH]: Copy directory contents to clipboard (defaults to current directory)
+
+    Environment variables required:
+    ANTHROPIC_API_KEY: API key for accessing Claude API
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: If the ANTHROPIC_API_KEY environment variable is not set.
+    """
     try:
         # Set up logging
         logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

@@ -1,16 +1,36 @@
+"""Clipboard operations module for diffdev.
+
+This module provides functionality for copying directory contents and file
+trees to the system clipboard, with support for gitignore pattern filtering
+and proper file tree formatting.
+"""
+
 import logging
-import pyperclip
 from pathlib import Path
 from typing import Optional
 
-from .tree_utils import ProjectTreeGenerator
+import pyperclip
+
 from .gitignore import GitignoreParser
+from .tree_utils import ProjectTreeGenerator
 
 logger = logging.getLogger(__name__)
 
 
 def copy_directory_contents(directory: Optional[str] = None) -> None:
-    """Copy the contents of a directory to the clipboard"""
+    """Copy the contents of a directory to the system clipboard.
+
+    Creates a formatted tree representation of the directory structure and
+    file contents, respecting gitignore patterns, and copies it to the
+    system clipboard. If clipboard access fails, prints to stdout instead.
+
+    Args:
+        directory (Optional[str]): Path to the directory to copy. If None,
+            uses the current directory.
+
+    Raises:
+        ValueError: If the specified directory is not found.
+    """
     try:
         # Get the target directory
         target_path = Path(directory if directory else ".").resolve()

@@ -29,14 +29,14 @@ export ANTHROPIC_API_KEY="your-api-key-here"
 ## Usage
 
 1. Navigate to your git repository
-2. Run `diffdev`
-3. Use the TUI to select files for context:
+1. Run `diffdev`
+1. Use the TUI to select files for context:
    - Space: Toggle file/directory selection
    - Tab: Expand/collapse directories
    - Enter: Confirm selection
    - q: Quit selection
-4. Enter your prompt describing the desired changes
-5. Review and confirm the generated patch
+1. Enter your prompt describing the desired changes
+1. Review and confirm the generated patch
 
 ### Commands
 

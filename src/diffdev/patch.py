@@ -1,36 +1,71 @@
-# src/patch.py
+"""Patch management module for diffdev.
+
+This module handles the generation and application of git patches for code
+modifications. It processes LLM responses into valid patch files and manages
+their application and rollback using git commands.
+"""
+
 import logging
 import subprocess
-from pathlib import Path
 from difflib import unified_diff
-from typing import Dict, Any, List, Optional
+from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
 class PatchManager:
-    """Manages generation and application of patches from LLM responses."""
+    """Manages generation and application of patches from LLM responses.
+
+    Handles the creation of git-compatible patch files from LLM-generated
+    code modifications, as well as their application and rollback. Supports
+    both adding new files and modifying existing ones.
+
+    Attributes:
+        patch_dir (Path): Directory where generated patch files are stored.
+    """
 
     def __init__(self, patch_dir: Optional[Path] = None):
-        """
+        """Initialize the patch manager.
+
         Args:
-            patch_dir: Directory to store patches. Defaults to current directory
+            patch_dir (Optional[Path]): Directory to store patches. If None,
+                uses the current directory.
         """
         self.patch_dir = Path(patch_dir) if patch_dir else Path(".")
         self.patch_dir.mkdir(exist_ok=True)
 
     def generate_patch(self, response: Dict[str, Any]) -> str:
-        """
-        Generate a patch file from LLM response.
+        """Generate a patch file from LLM response.
+
+        Creates a unified diff patch file from the code modifications specified
+        in the LLM's response. Handles both file modifications and new file
+        creation.
 
         Args:
-            response: JSON response from LLM containing file changes
+            response (Dict[str, Any]): JSON response from LLM containing file
+                changes. Expected format:
+                {
+                    "files": [
+                        {
+                            "filename": "path/to/file",
+                            "changes": [
+                                {
+                                    "search": ["lines", "to find"],
+                                    "replace": ["new", "lines"]
+                                }
+                            ]
+                        }
+                    ]
+                }
 
         Returns:
-            Path to generated patch file
+            str: Path to the generated patch file.
 
         Raises:
-            ValueError: If response format is invalid
+            ValueError: If response format is invalid or files cannot be processed.
         """
         if "files" not in response:
             raise ValueError("Invalid response format: missing 'files' key")
@@ -102,14 +137,16 @@ class PatchManager:
         return str(patch_path)
 
     def apply_patch(self, patch_path: str) -> None:
-        """
-        Apply a patch file using git apply.
+        """Apply a patch file using git apply.
+
+        Applies the specified patch file to the working directory using
+        git's patch application functionality.
 
         Args:
-            patch_path: Path to patch file
+            patch_path (str): Path to the patch file to apply.
 
         Raises:
-            subprocess.CalledProcessError: If patch application fails
+            subprocess.CalledProcessError: If patch application fails.
         """
         try:
             subprocess.run(
@@ -125,14 +162,16 @@ class PatchManager:
             raise
 
     def rollback(self, patch_path: str) -> None:
-        """
-        Rollback a previously applied patch.
+        """Rollback a previously applied patch.
+
+        Reverses a previously applied patch using git's reverse patch
+        functionality.
 
         Args:
-            patch_path: Path to patch file to reverse
+            patch_path (str): Path to the patch file to reverse.
 
         Raises:
-            subprocess.CalledProcessError: If rollback fails
+            subprocess.CalledProcessError: If rollback fails.
         """
         try:
             subprocess.run(
@@ -148,14 +187,20 @@ class PatchManager:
             raise
 
     def _read_file(self, filename: str) -> str:
-        """
-        Read a file's content.
+        """Read a file's content.
+
+        Reads and returns the content of the specified file. Returns an
+        empty string if the file doesn't exist, allowing for new file
+        creation.
 
         Args:
-            filename: Path to file
+            filename (str): Path to the file to read.
 
         Returns:
-            File content as string. Empty string if file doesn't exist.
+            str: File content as string. Empty string if file doesn't exist.
+
+        Raises:
+            Exception: If file read operation fails for an existing file.
         """
         try:
             path = Path(filename)
