@@ -29,6 +29,11 @@ dependencies = [
     "pathspec",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0"
+]
+
 [project.urls]
 Homepage = "https://github.com/Mockapapella/diffdev"
 Repository = "https://github.com/Mockapapella/diffdev.git"
