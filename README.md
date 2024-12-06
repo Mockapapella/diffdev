@@ -12,15 +12,15 @@ diffdev is a command-line tool that helps you make repo-wide code changes using 
 
 ## Requirements
 
-- Python 3.11 or higher
+- Python 3.11 or 3.12
 - Git installed and available in PATH
 - Anthropic API key
 
 ## Installation
 
 ```bash
-# Install from PyPI
-pip install diffdev
+# Install using uvx
+uvx diffdev
 
 # Set your Anthropic API key
 export ANTHROPIC_API_KEY="your-api-key-here"
@@ -68,3 +68,21 @@ Enter command or prompt: Add type hints to the User class methods
 ## Development
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## TODO
+
+- Fix bug in TUI file selector where directories with selected files don't show filled selector
+- Add agents functionality (multiple LLMs solving same problem with result aggregation)
+- Support OpenAI API compatible endpoints (with port configuration)
+- Allow specifying model name to use
+- Add general model configuration file
+- Add flag to specify API key
+- Add retry/refix functionality for failed diffs
+- Add retry/fix for invalid JSON LLM responses
+- Enhance TUI with more color options
+- Improve code modularization
+- Add automatic file searching capability
+- Add tool support for fetching up-to-date documentation
+- Add navigation system for reviewing changes in current session
+- Add reference system for previous changes in current session
+- Files in the current context should be continuously updated as the chat progresses
