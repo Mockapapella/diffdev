@@ -27,6 +27,7 @@ classifiers = [
 dependencies = [
     "anthropic",
     "pathspec",
+    "pyperclip",
 ]
 
 [project.optional-dependencies]
