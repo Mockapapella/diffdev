@@ -1,9 +1,8 @@
 name: Publish Python Package
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [created]
 
 jobs:
   test:
@@ -34,42 +33,19 @@ jobs:
     environment: release
     permissions:
       id-token: write
-
     steps:
     - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Get version from tag
-      id: get_version
-      run: |
-        # Strip git ref prefix from version
-        VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-        # Strip "v" prefix from tag name
-        [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9].* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Update version in files
-      run: |
-        # Update version in __init__.py
-        sed -i "s/__version__ = .*/__version__ = \"${{ steps.get_version.outputs.version }}\"/" src/diffdev/__init__.py
-        # Update version in pyproject.toml
-        sed -i "s/version = .*/version = \"${{ steps.get_version.outputs.version }}\",/" pyproject.toml
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: pip
         cache-dependency-path: '**/pyproject.toml'
-
     - name: Install build
       run: |
         python -m pip install build
-
     - name: Build package
       run: |
         python -m build
-
     - name: Publish
       uses: pypa/gh-action-pypi-publish@release/v1
