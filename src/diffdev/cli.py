@@ -194,12 +194,27 @@ def main():
             action="store_true",
             help="Generate and apply a patch from clipboard contents",
         )
+        parser.add_argument(
+            "--apply-patch",
+            type=str,
+            help="Apply a patch file to the repository",
+            metavar="PATCH_FILE",
+        )
+        parser.add_argument(
+            "--undo-patch",
+            type=str,
+            help="Undo (reverse apply) a patch file",
+            metavar="PATCH_FILE",
+        )
         args = parser.parse_args()
 
         # Handle directory copy mode
         if args.copydir is not None:
             copy_directory_contents(args.copydir)
             return
+
+        # Handle patch operations
+        patch_manager = PatchManager()
 
         if args.patch_from_clipboard:
             try:
@@ -208,7 +223,6 @@ def main():
                 import pyperclip
 
                 clipboard_content = pyperclip.paste()
-                patch_manager = PatchManager()
                 patch_data = json.loads(clipboard_content)
                 patch_path = patch_manager.generate_patch(patch_data)
                 patch_manager.apply_patch(patch_path)
@@ -219,6 +233,24 @@ def main():
                 sys.exit(1)
             except Exception as e:
                 print(f"Error applying patch from clipboard: {e}")
+                sys.exit(1)
+
+        if args.apply_patch:
+            try:
+                patch_manager.apply_patch(args.apply_patch)
+                print(f"Successfully applied patch file: {args.apply_patch}")
+                return
+            except Exception as e:
+                print(f"Error applying patch file: {e}")
+                sys.exit(1)
+
+        if args.undo_patch:
+            try:
+                patch_manager.rollback(args.undo_patch)
+                print(f"Successfully undid patch file: {args.undo_patch}")
+                return
+            except Exception as e:
+                print(f"Error undoing patch file: {e}")
                 sys.exit(1)
 
         # Normal diffdev mode
