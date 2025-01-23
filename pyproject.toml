@@ -24,11 +24,6 @@ classifiers = [
     "Topic :: Software Development :: Code Generators",
     "Topic :: Software Development :: Version Control :: Git"
 ]
-dependencies = [
-    "anthropic",
-    "pathspec",
-    "pyperclip",
-]
 
 [project.optional-dependencies]
 test = [

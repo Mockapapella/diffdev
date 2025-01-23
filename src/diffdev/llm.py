@@ -94,9 +94,8 @@ class AnthropicProvider(LLMProvider):
                     print(chunk_text, end="", flush=True)
                     full_response += chunk_text
 
-            # Strip </answer> tag if end of response
-            if full_response.endswith("</answer>"):
-                full_response = full_response[:-9]
+            # Remove any </answer> tags from the response
+            full_response = full_response.replace("</answer>", "")
 
             return full_response.rstrip()
 
