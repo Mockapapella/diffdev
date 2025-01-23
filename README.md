@@ -2,35 +2,31 @@
 
 diffdev is a command-line tool that helps you make repo-wide code changes using an AI assistant. It allows you to interactively select files, provide a prompt describing the desired changes, and apply the AI-generated modifications as a git patch.
 
+This is half my experimental playground, half useful tool for the community. Pull requests for wacky experiments welcome.
+
 ## Key Features
 
 - **File Selection**: Use a TUI to select files to include in the context
 - **Context-Aware Changes**: The AI assistant analyzes the selected files and your prompt to generate contextual changes
 - **Structured Patch Generation**: Changes are returned as a git-style patch for easy application and review
 - **Revision Control Integration**: Apply patches using `git apply` and rollback changes when needed
-- **Multiple AI Providers**: Supports multiple LLM providers (Claude, DeepSeek) with flexible configuration
 - **Claude AI Assistant**: Leverages the powerful Claude language model from Anthropic
 - **FrankenClaude Mode**: Enhanced capabilities by combining multiple AI models
-- **Smart Context**: Automatically updates context with modified files after changes
 - **Colored Output**: Improved readability with color-coded responses
-- **Directory Content Copying**: Quickly copy formatted directory trees and file contents to clipboard
-
-## Requirements
-
-- Python 3.11 or 3.12 (untested for others)
-- Git installed and available in PATH
-- API key(s) for desired providers (Anthropic, DeepSeek)
-- UNIX like OS
 
 ## Installation
 
-```bash
-# Install using uvx
-uvx diffdev
+If you have `uv` installed, you can just run
 
-# Set your API key(s)
-export ANTHROPIC_API_KEY="your-api-key-here"  # Required for Claude/FrankenClaude
-export DEEPSEEK_API_KEY="your-api-key-here"   # Required for DeepSeek provider
+```bash
+uvx diffdev
+```
+
+Make sure you have your Anthropic API key set if you want to use the main tool. If you want to use the FrankenClaude flag you also need to have a DeepSeek key set.
+
+```bash
+export ANTHROPIC_API_KEY="your-api-key-here"
+export DEEPSEEK_API_KEY="your-api-key-here"
 ```
 
 ## Usage
@@ -44,12 +40,8 @@ export DEEPSEEK_API_KEY="your-api-key-here"   # Required for DeepSeek provider
    - q: Quit selection
 1. Enter your prompt describing the desired changes
 1. Review and confirm the generated patch
-1. Changes will automatically update the context for future prompts
 
-Additional options:
-
-- Use `--frankenclaude` to enable enhanced capabilities with multiple AI models
-- Configure logging level for more detailed output
+Run `uvx diffdev --help` for additional flags.
 
 ### Commands
 
@@ -57,20 +49,6 @@ Additional options:
 - `undo`: Rollback last applied changes
 - `redo`: Reapply last rolled back changes
 - `exit`: Exit diffdev
-
-### Directory Content Copying
-
-To quickly copy a directory's tree structure and file contents:
-
-```bash
-# Copy current directory
-diffdev --copydir
-
-# Copy specific directory
-diffdev --copydir /path/to/directory
-```
-
-This formats the output with line numbers and proper tree structure, respecting gitignore patterns.
 
 ## Example
 
