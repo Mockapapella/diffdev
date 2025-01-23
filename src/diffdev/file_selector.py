@@ -416,6 +416,9 @@ class FileSelector:
                     context.append({"path": file_info["path"], "content": "[Binary file]"})
                 except Exception as e:
                     context.append(
-                        {"path": file_info["path"], "content": f"[Error reading file: {str(e)}]"}
+                        {
+                            "path": file_info["path"],
+                            "content": f"[Error reading file: {str(e)}]",
+                        }
                     )
         return context

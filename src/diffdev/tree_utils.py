@@ -43,17 +43,12 @@ class FileContentFormatter:
 
             # Format each line with padding
             formatted_lines = [
-                f"{str(i+1).rjust(padding)} | {line}" for i, line in enumerate(lines)
+                f"{str(i + 1).rjust(padding)} | {line}" for i, line in enumerate(lines)
             ]
 
             separator = "-" * 80
 
-            return (
-                f"\n{file_path}:\n"
-                f"{separator}\n"
-                f"{''.join(formatted_lines)}\n"
-                f"{separator}\n"
-            )
+            return f"\n{file_path}:\n{separator}\n{''.join(formatted_lines)}\n{separator}\n"
 
         except UnicodeDecodeError:
             return f"\n{file_path}: [Binary file]\n"

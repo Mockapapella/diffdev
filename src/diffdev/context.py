@@ -96,7 +96,7 @@ class ContextManager:
                         lines = f.readlines()
                         padding = len(str(len(lines)))
                         formatted_content = "\n".join(
-                            f"{str(i+1).rjust(padding)} | {line.rstrip()}"
+                            f"{str(i + 1).rjust(padding)} | {line.rstrip()}"
                             for i, line in enumerate(lines)
                         )
 

@@ -126,7 +126,10 @@ class CLI:
                                         with open(file_path, "r", encoding="utf-8") as f:
                                             lines = f.readlines()
                                             selected_files.append(
-                                                {"path": file_path, "content": "".join(lines)}
+                                                {
+                                                    "path": file_path,
+                                                    "content": "".join(lines),
+                                                }
                                             )
                                     except Exception as e:
                                         logger.error(
@@ -160,7 +163,10 @@ class CLI:
                                         with open(file_path, "r", encoding="utf-8") as f:
                                             lines = f.readlines()
                                             selected_files.append(
-                                                {"path": file_path, "content": "".join(lines)}
+                                                {
+                                                    "path": file_path,
+                                                    "content": "".join(lines),
+                                                }
                                             )
                                     except Exception as e:
                                         logger.error(
@@ -200,7 +206,10 @@ class CLI:
                                     with open(file_path, "r", encoding="utf-8") as f:
                                         lines = f.readlines()
                                         selected_files.append(
-                                            {"path": file_path, "content": "".join(lines)}
+                                            {
+                                                "path": file_path,
+                                                "content": "".join(lines),
+                                            }
                                         )
                                 except Exception as e:
                                     logger.error(f"Error refreshing context for {file_path}: {e}")
@@ -257,6 +266,11 @@ def main():
             "--patch-from-clipboard",
             action="store_true",
             help="Generate and apply a patch from clipboard contents",
+        )
+        parser.add_argument(
+            "--frankenclaude",
+            action="store_true",
+            help="Starts a basic chat. Generate reasoning with DeekSeek R1, pipe the reasoning to Claude.",
         )
         parser.add_argument(
             "--apply-patch",
