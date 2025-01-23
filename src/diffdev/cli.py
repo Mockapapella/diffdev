@@ -16,6 +16,8 @@ from .clipboard import copy_directory_contents
 from .config import ConfigManager
 from .context import ContextManager
 from .file_selector import FileSelector
+from .llm import AnthropicProvider
+from .llm import DeepSeekProvider
 from .llm import LLMClient
 from .patch import PatchManager
 
@@ -46,7 +48,11 @@ class CLI:
         """
         self.config = ConfigManager()
         self.context = ContextManager()
-        self.llm = LLMClient(self.config.get_api_key())
+
+        # Initialize provider-agnostic LLM client
+        self.llm = LLMClient()
+        self.llm.add_provider("anthropic", AnthropicProvider(self.config.get_anthropic_key()))
+
         self.patch_manager = PatchManager(context_manager=self.context)
         self.last_patch: Optional[str] = None
         self.last_rolled_back_patch: Optional[str] = None
@@ -241,18 +247,23 @@ def main():
     The following command-line options are supported:
     --copydir [PATH]: Copy directory contents to clipboard (defaults to current directory)
 
-    Environment variables required:
-    ANTHROPIC_API_KEY: API key for accessing Claude API
+    Environment variables:
+    ANTHROPIC_API_KEY: Required. API key for accessing Claude API
+    DEEPSEEK_API_KEY: Required for FrankenClaude mode. API key for accessing DeepSeek API
 
     Returns:
         None
 
     Raises:
-        SystemExit: If the ANTHROPIC_API_KEY environment variable is not set.
+        SystemExit: If required API keys are not set
     """
     try:
         # Set up logging
-        logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+        log_level = logging.DEBUG if os.getenv("DEBUG") == "1" else logging.WARNING
+        logging.basicConfig(level=log_level, format="%(asctime)s - %(levelname)s - %(message)s")
+        # Set OpenAI and httpx loggers to same level
+        logging.getLogger("openai").setLevel(log_level)
+        logging.getLogger("httpx").setLevel(log_level)
 
         # Parse command line arguments
         parser = argparse.ArgumentParser(description="diffdev - AI-assisted code changes")
@@ -286,7 +297,48 @@ def main():
         )
         args = parser.parse_args()
 
-        # Handle directory copy mode
+        # Initialize config for API key validation
+        config = ConfigManager()
+
+        if args.frankenclaude:
+            # Validate both API keys are present
+            keys_valid, error_msg = config.validate_frankenclaude_keys()
+            if not keys_valid:
+                print(f"Error: {error_msg}")
+                print("FrankenClaude requires both ANTHROPIC_API_KEY and DEEPSEEK_API_KEY")
+                sys.exit(1)
+
+            print("\nStarting FrankenClaude session...")
+            print("Using DeepSeek Reasoner to enhance Claude's responses.")
+            print("For each query you'll see:")
+            print("1. DeepSeek's reasoning (if available)")
+            print("2. Claude's response (enhanced by the reasoning)")
+            print("Enter 'exit' to quit\n")
+
+            # Initialize provider-agnostic client with both providers
+            llm = LLMClient()
+            llm.add_provider("anthropic", AnthropicProvider(config.get_anthropic_key()))
+            llm.add_provider("deepseek", DeepSeekProvider(config.get_deepseek_key()))
+
+            while True:
+                try:
+                    user_input = input("\nYou: ").strip()
+                    if user_input.lower() == "exit":
+                        break
+                    if not user_input:
+                        continue
+
+                    print("\nClaude:", end=" ")
+                    llm.chat(user_input)
+                    print()
+
+                except KeyboardInterrupt:
+                    print("\nChat session terminated.")
+                    break
+                except Exception as e:
+                    print(f"\nError: {e}")
+            return
+
         if args.copydir is not None:
             copy_directory_contents(args.copydir)
             return
@@ -331,9 +383,8 @@ def main():
                 print(f"Error undoing patch file: {e}")
                 sys.exit(1)
 
-        # Normal diffdev mode
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
+        # Normal diffdev mode - validate Anthropic key only
+        if not config.get_anthropic_key():
             print("Error: ANTHROPIC_API_KEY environment variable not set")
             sys.exit(1)
 

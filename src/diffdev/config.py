@@ -22,18 +22,40 @@ class ConfigManager:
     def __init__(self):
         """Initialize the configuration manager.
 
-        The API key is loaded from the ANTHROPIC_API_KEY environment variable during
-        initialization.
+        API keys are loaded from environment variables during initialization.
         """
-        self._api_key = os.getenv("ANTHROPIC_API_KEY")
+        self._anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+        self._deepseek_key = os.getenv("DEEPSEEK_API_KEY")
 
-    def get_api_key(self) -> Optional[str]:
+    def get_anthropic_key(self) -> Optional[str]:
         """Retrieve the Anthropic API key.
 
         Returns:
             Optional[str]: The API key if set, None otherwise.
         """
-        return self._api_key
+        return self._anthropic_key
+
+    def get_deepseek_key(self) -> Optional[str]:
+        """Retrieve the DeepSeek API key.
+
+        Returns:
+            Optional[str]: The API key if set, None otherwise.
+        """
+        return self._deepseek_key
+
+    def validate_frankenclaude_keys(self) -> tuple[bool, str]:
+        """Validate both API keys are present for FrankenClaude mode.
+
+        Returns:
+            tuple[bool, str]: A tuple containing:
+                - bool: True if both keys are present, False otherwise
+                - str: Error message if validation fails, empty string if successful
+        """
+        if not self._anthropic_key:
+            return False, "ANTHROPIC_API_KEY environment variable not set"
+        if not self._deepseek_key:
+            return False, "DEEPSEEK_API_KEY environment variable not set"
+        return True, ""
 
     def get_system_prompt(self) -> str:
         """Get the system prompt for the AI model.
