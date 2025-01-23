@@ -8,14 +8,18 @@ diffdev is a command-line tool that helps you make repo-wide code changes using 
 - **Context-Aware Changes**: The AI assistant analyzes the selected files and your prompt to generate contextual changes
 - **Structured Patch Generation**: Changes are returned as a git-style patch for easy application and review
 - **Revision Control Integration**: Apply patches using `git apply` and rollback changes when needed
+- **Multiple AI Providers**: Supports multiple LLM providers (Claude, DeepSeek) with flexible configuration
 - **Claude AI Assistant**: Leverages the powerful Claude language model from Anthropic
+- **FrankenClaude Mode**: Enhanced capabilities by combining multiple AI models
+- **Smart Context**: Automatically updates context with modified files after changes
+- **Colored Output**: Improved readability with color-coded responses
 - **Directory Content Copying**: Quickly copy formatted directory trees and file contents to clipboard
 
 ## Requirements
 
 - Python 3.11 or 3.12 (untested for others)
 - Git installed and available in PATH
-- Anthropic API key
+- API key(s) for desired providers (Anthropic, DeepSeek)
 - UNIX like OS
 
 ## Installation
@@ -24,8 +28,9 @@ diffdev is a command-line tool that helps you make repo-wide code changes using 
 # Install using uvx
 uvx diffdev
 
-# Set your Anthropic API key
-export ANTHROPIC_API_KEY="your-api-key-here"
+# Set your API key(s)
+export ANTHROPIC_API_KEY="your-api-key-here"  # Required for Claude/FrankenClaude
+export DEEPSEEK_API_KEY="your-api-key-here"   # Required for DeepSeek provider
 ```
 
 ## Usage
@@ -39,6 +44,12 @@ export ANTHROPIC_API_KEY="your-api-key-here"
    - q: Quit selection
 1. Enter your prompt describing the desired changes
 1. Review and confirm the generated patch
+1. Changes will automatically update the context for future prompts
+
+Additional options:
+
+- Use `--frankenclaude` to enable enhanced capabilities with multiple AI models
+- Configure logging level for more detailed output
 
 ### Commands
 
@@ -101,4 +112,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Add tool support for fetching up-to-date documentation
 - Add navigation system for reviewing changes in current session
 - Add reference system for previous changes in current session
-- Files in the current context should be continuously updated as the chat progresses
