@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "diffdev"
-version = "0.2.0"
+version = "0.2.1"
 description = "A semi-autonomous framework for easily developing repo-wide changes"
 requires-python = ">=3.11"
 authors = [
