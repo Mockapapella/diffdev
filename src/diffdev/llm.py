@@ -94,10 +94,11 @@ class AnthropicProvider(LLMProvider):
                     print(chunk_text, end="", flush=True)
                     full_response += chunk_text
 
-            # Strip </answer> tag if present at the end
-            full_response = full_response.rstrip()[:-9]  # 9 is length of '</answer>'
+            # Strip </answer> tag if end of response
+            if full_response.endswith("</answer>"):
+                full_response = full_response[:-9]
 
-            return full_response
+            return full_response.rstrip()
 
         except Exception as e:
             logger.error(f"Anthropic API error: {e}")
@@ -136,14 +137,14 @@ class DeepSeekProvider(LLMProvider):
                 model=self.model, messages=messages, stream=True
             )
 
-            reasoning = "<thinking>\n"  # Start with opening tag
+            reasoning = "<thinking>\n"
             for chunk in response:
                 if chunk.choices[0].delta.reasoning_content:
                     chunk_text = chunk.choices[0].delta.reasoning_content
                     print(chunk_text, end="", flush=True)  # Still print for user feedback
                     reasoning += chunk_text
-            reasoning += "\n</thinking><answer>"  # End with closing tag
-            return reasoning
+            reasoning += "\n</thinking>\n<answer>"
+            return reasoning.rstrip()
 
         except Exception as e:
             logger.error(f"DeepSeek API error: {e}")
@@ -220,6 +221,7 @@ class LLMClient:
                 )
                 if not reasoning.strip():
                     print(f"\n{Fore.YELLOW}Note: No additional reasoning provided{Style.RESET_ALL}")
+                print("\n")
                 print(f"{Fore.CYAN}{'=' * 40}{Style.RESET_ALL}")
 
             # Prepare messages with optional reasoning
@@ -241,6 +243,7 @@ class LLMClient:
                     f"{Fore.RED}No response received from Claude. It's likely that Claude determined from the reasoning trace that there was no more left to say.{Style.RESET_ALL}"
                 )
                 return ""
+            print(f"\n{Fore.GREEN}{'-' * 40}{Style.RESET_ALL}")
 
             # Add response to history
             self.chat_history.append({"role": "assistant", "content": response})
